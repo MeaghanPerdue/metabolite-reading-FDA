@@ -5,15 +5,23 @@ output: html_notebook
 22 Feb 2023
 # Data Wrangling for functional analysis of reading-MRS data 
 Data from Preschool Study
-
 ```{r}
-#read in behavioral data from REDCap export
-redcap<-read.csv("~/OneDrive - University of Calgary/Preschool_data/REDCap_exports/PreschoolImaging-NEPSYWoodcock_DATA_LABELS_2023-02-22_1010.csv", colClasses=c("Phonological processing total score"="numeric","Phonological processing scaled score"="numeric", "Word Identification Raw Score"="numeric", "Word Attack Raw Score"="numeric", "Word Identification Scaled Score"="numeric", "Word Attack Scaled Score"="numeric"))
+library(tidyverse)
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
 
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+```{r}
+# read in behavioral data from REDCap export
+redcap<-read.csv("~/OneDrive - University of Calgary/Preschool_data/REDCap_exports/PreschoolImaging-NEPSYWoodcock_DATA_LABELS_2023-02-22_1010.csv", colClasses=c("Phonological processing total score"="numeric","Phonological processing scaled score"="numeric", "Word Identification Raw Score"="numeric", "Word Attack Raw Score"="numeric", "Word Identification Scaled Score"="numeric", "Word Attack Scaled Score"="numeric"))
+
+# filter to include only columns of interest (PP scores and WRMT scores)
+beh<- redcap %>%
+  dplyr::select(subj_id, study_code, Phonological.processing.total.score, Phonological.processing.scaled.score, Word.Identification.Raw.Score, Word.Identification.Scaled.Score, Word.Attack.Raw.Score, Word.Attack.Scaled.Score)
+
+colnames(beh)<-c("subj_id", "study_code", "pp_total", "pp_scaled", "wid_raw", "wid_scaled", "wattack_raw", "wattack_scaled")
+
+```
+
+
 
