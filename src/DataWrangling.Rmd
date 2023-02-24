@@ -9,11 +9,45 @@ Data from Preschool Study
 library(tidyverse)
 ```
 
-
+## Read in all MRS data and create full MRS database
 
 ```{r}
+# read in 2021 MRS data 
+mrs<-read.csv("~/OneDrive - University of Calgary/Preschool_data/MRS/data/lag_data_molal_outliers_removed_n318_Feb2023.csv")
+
+# rename study codes for duplicated PS21_011 (Subj 10046 should be PS21_012)
+which(mrs$study_code == "PS21_011") 
+mrs$study_code[262]<-'PS21_012'
+
+# read in 2023 MRS data (newly processed subjects not included in dev ms)
+lcm_2023<-read.csv("~/OneDrive - University of Calgary/Preschool_data/MRS/data/LTP_LCM_CorrectedTable_.csv")
+
+#select variables
+molal_2023 <- lcm_2023 %>%
+  dplyr::select(File_ID, fGM, fWM, fCSF, NAA_conc_molal, Cre_PCr_conc_molal, Cho_GPC_PCh_conc_molal, Ins_conc_molal, Glu_conc_molal, Glu_Gln_conc_molal)
+
+#read in QC metrics from FID-A
+qc_2023<-read.csv("~/OneDrive - University of Calgary/Preschool_data/MRS/data/SE_PRESS_QC_Metrics_ .csv")
+
+mrs_2023<-left_join(molal_2023, qc_2023, by = "File_ID")
+
+#read in subject demographics for 2023 batch
+demo_2023 <- read.csv("/Users/meaghanperdue/OneDrive - University of Calgary/Preschool_data/MRS/data/lag_analysis_subs_new.csv")
+
+dat_2023 <- left_join(demo_2023, mrs_2023, by ="File_ID")
+
+#append 2023 data to old data for final database
+dat_mrs<- bind_rows(mrs, dat_2023)
+
+write.csv(dat_mrs, "~/OneDrive - University of Calgary/Preschool_data/MRS/data/LTP_MRS_data_2023.csv", row.names = FALSE)
+
+
+```
+
+## Read in behavioral data and add to MRS database
+```{r}
 # read in behavioral data from REDCap export
-redcap<-read.csv("~/OneDrive - University of Calgary/Preschool_data/REDCap_exports/PreschoolImaging-NEPSYWoodcock_DATA_LABELS_2023-02-22_1010.csv", colClasses=c("Phonological processing total score"="numeric","Phonological processing scaled score"="numeric", "Word Identification Raw Score"="numeric", "Word Attack Raw Score"="numeric", "Word Identification Scaled Score"="numeric", "Word Attack Scaled Score"="numeric"))
+redcap<-read.csv("~/OneDrive - University of Calgary/Preschool_data/REDCap_exports/PreschoolImaging-NEPSYWoodcock_DATA_LABELS_2023-02-22_1010_clean.csv", colClasses=c("Phonological processing total score"="numeric","Phonological processing scaled score"="numeric", "Word Identification Raw Score"="numeric", "Word Attack Raw Score"="numeric", "Word Identification Scaled Score"="numeric", "Word Attack Scaled Score"="numeric"))
 
 # filter to include only columns of interest (PP scores and WRMT scores)
 beh<- redcap %>%
@@ -21,7 +55,34 @@ beh<- redcap %>%
 
 colnames(beh)<-c("subj_id", "study_code", "pp_total", "pp_scaled", "wid_raw", "wid_scaled", "wattack_raw", "wattack_scaled")
 
+
+#join beh data to MRS database
+
+dat<-left_join(dat_mrs, beh, by = "study_code")
+
+write.csv(dat, "~/OneDrive - University of Calgary/Preschool_data/MRS/reading/data/LTP_MRS_reading_database_2023.csv", row.names = FALSE)
+
+
 ```
 
 
+## Data quality check
+Check data for outliers & issues
+```{r}
+
+```
+
+
+## Calculate composite reading scores
+First, center & scale raw Word ID and Word Attack Scores, then average for a composite
+```{r}
+dat$wid_raw_z<-scale(dat$wid_raw)
+
+dat$wattack_raw_z<-(dat$wattack_raw)
+
+dat$wrmt_comp<-(dat$wid_raw_z + dat$wattack_raw_z)/2
+
+
+
+```
 
